@@ -31,7 +31,7 @@ typedef struct element
 
 typedef struct sparse_matrix
 {
-    ele *list;
+    ele *ele_nz;
     unsigned long int *col_index;
     unsigned long int *offset;
     unsigned long int num_nzd;          //num of elements
@@ -62,24 +62,107 @@ bool add_el(spa_mat *m, ele e);
 
 #define val(a) (a.val)
 
-#define list(a) ((a).list)
+#define ele_nz(a) ((a).ele_nz)
 #define index(a) ((a).col_index)
-#define offset(a) (a.offset)
+#define offset(a) ((a).offset)
+
+#define col(a) ((a).pos.col)
+#define col(a) ((a).pos.col)
 
 //functions
 
-bool add_el(spa_mat *m, ele e)
+// bool add_el(spa_mat *m, ele e)
+// {
+//     unsigned long int num_nzd = 0;
+//     int max_row;
+//     if (val(e) != 0)
+//     {
+//         ele_nz(*m)[num_nzd] = e;
+//         index(*m)[num_nzd] = e.p.col;
+//         if (e.p.row < max_row)
+//             offset(*m)[num_nzd] = e.p.row;
+//         else
+//             offset(*m)
+//     }
+//     else
+//     {
+//         return false;
+//     }
+// }
+
+static unsigned long compress(spa_mat *m, double vals[],unsigned long num_val)
 {
-    unsigned long int num_nzd = 0;
-    if (val(e) != 0)
+    unsigned long row_dens[height_sparse(m)];
+    unsigned long compressed_len, max_offset;
+    int i, row;
+    unsigned long num_nzd = 0;
+    for (int i = 0; i < num_val; i++)
     {
-        list(*m)[num_nzd] = e;
-        index(*m)[num_nzd] = e.p.col;
-        if (e.p.row < max_row_last)
-            offset(*m) = ;
+        if (vals[i] != 0)
+        {
+            ele_nz(*m)[num_nzd].val = vals[i];
+            index(*m)[num_nzd] = e.p.col;
+            if (e.p.row < max_row)
+                offset(*m)[num_nzd] = e.p.row;
+            else
+                offset(*m)
+        }
+        else
+            ;
     }
-    else
+
+        compressed_len = 0;
+    for (i = 0; i < 2 * nelem(m); i++)
     {
-        return false;
+        vals[i] = zero(m);
+        rows[i] = 0;
     }
+
+    max_offset = 0;
+
+    /* fills the row_dens vector with row indices by the order in which they
+   * should be inserted in the compressed vectors */
+    list_rows_by_density(m, row_dens);
+
+    for (i = 0; i < height_sparse(m); i++)
+    {
+        row = row_dens[i];
+        offsets[row - row(min(m))] = find_slot(m, vals, rows, compressed_len, row);
+        max_offset = max_int(max_offset, offsets[row - row(min(m))]);
+        compressed_len = max_offset + width_sparse(m);
+    }
+
+    return compressed_len;
+}
+
+void print_compress_sparse(spa_mat m)
+{
+    double vals[nelem(m) * 2];
+    unsigned long rows[nelem(m) * 2];
+    unsigned long offsets[height_sparse(m)];
+    unsigned long compressed_len;
+    unsigned long i;
+
+    if (density_sparse(m) > 0.5)
+    {
+        printf("dense matrix\n");
+        return;
+    }
+
+    compressed_len = compress(m, vals, rows, offsets);
+
+    printf("value =");
+    for (i = 0; i < compressed_len; i++)
+        printf(" %.3f", vals[i]);
+    printf("\n");
+
+    printf("index =");
+    for (i = 0; i < compressed_len; i++)
+        printf(" %lu", rows[i]);
+    printf("\n");
+
+    printf("offset =");
+    for (i = 0; i < height_sparse(m); i++)
+        printf(" %lu", offsets[i]);
+    printf("\n");
 }
