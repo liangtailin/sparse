@@ -4,165 +4,135 @@
 #include <stdbool.h>
 #include <string.h>
 
-// #include "sparse.h"
-/*
- * input: ptr to sparse, element to add
- *
- * adds a new element to the matrix
- *
- * if the value is 'zero', removes the value in that position
- * if the position has a value, replace it.
- * 
- * Return codes:
- *   true: Successful operation
- *   false: Space limit reached
- */
+#include "sparse.h"
 
-typedef struct position
-{
-    unsigned long int col, row;
-} pos;
-
-typedef struct element
-{
-    float val;
-    pos p;
-} ele;
-
-typedef struct sparse_matrix
-{
-    ele *ele_nz;
-    unsigned long int *col_index;
-    unsigned long int *offset;
-    unsigned long int num_nzd;          //num of elements
-    unsigned long int num_row, num_row; //max of col
-} spa_mat;
-
-// selectors
-
-#define zero(a) ((a).zero)
-
-// functions
-
-bool add_el(spa_mat *m, ele e);
-
-// void print_spa_mat(spa_mat m);
-
-// void print_charact_spa_mat(spa_mat m);
-
-// void change_zero(spa_mat *m, double new_zero);
-
-// void print_row_i(spa_mat m, unsigned long row_i);
-
-// void print_col_j(spa_mat m, unsigned long col_j);
-
-// void print_all_over_diag(spa_mat m);
-
-// void print_n_diff_vals(spa_mat m);
-
-#define val(a) (a.val)
-
+/* for sparse mat */
 #define ele_nz(a) ((a).ele_nz)
 #define index(a) ((a).col_index)
 #define offset(a) ((a).offset)
 
-#define col(a) ((a).pos.col)
-#define col(a) ((a).pos.col)
+/* for ele */
+#define val(a) ((a).val)
+#define col(a) ((a).p.col)
+#define row(a) ((a).p.row)
 
-//functions
+void put_into_ele(val_t *a, count_t max_row, count_t max_col, ele *e)
+{
+    count_t k = 0;
+    for (count_t i = 0; i < max_row; i++)
+    {
+        for (count_t j = 0; j < max_col; j++)
+        {
+            col(e[k]) = j;
+            row(e[k]) = i;
+            val(e[k]) = a[k];
+            printf("%f\t", val(e[k]));
+            k += 1;
+        }
+    }
+}
 
-// bool add_el(spa_mat *m, ele e)
+void compress(ele *e, size_t max_row, size_t max_col, spa_mat *m)
+{
+    size_t num_nz = 0, num_z = 0;
+    size_t ofst = 0;
+    size_t last_nzd = 0;
+
+    /* put into CSR */
+    for (int i = 0; i < max_row * max_col; i++)
+    {
+        if (val(e[i]) != 0)
+        {
+
+            if (row(e[i]) > row(e[last_nzd]) || !num_nz && !last_nzd)
+            {
+                offset(*m)[ofst] = num_nz;
+                ofst += 1;
+            }
+            val(*m)[num_nz] = val(e[i]);
+            index(*m)[num_nz] = col(e[i]);
+            num_nz += 1;
+            last_nzd = i;
+        }
+        else
+            num_z += 1;
+    }
+    offset(*m)[ofst] = num_nz;
+    m->num_zd = num_z;
+    m->num_nzd = num_nz;
+    m->num_row = max_row;
+    m->num_col = max_col;
+    printf("nzd = %ld, zd = %ld\n", num_nz, num_z);
+}
+
+// void decompress(spa_mat *m, size_t max_row, size_t max_col, ele *e)
 // {
-//     unsigned long int num_nzd = 0;
-//     int max_row;
-//     if (val(e) != 0)
+//     int k = 0;
+//     int col = 0, row = 0;
+//     for (int i = 0; i < max_col * max_row; i++)
 //     {
-//         ele_nz(*m)[num_nzd] = e;
-//         index(*m)[num_nzd] = e.p.col;
-//         if (e.p.row < max_row)
-//             offset(*m)[num_nzd] = e.p.row;
-//         else
-//             offset(*m)
-//     }
-//     else
-//     {
-//         return false;
+//         for (int j = 0; j < offset(*m)[k]; j++)
+//         {
+//             val(e[i]) = m->ele_nz[j].val;
+//             col(e[i]) = m->ele_nz[j].val;
+//             row(e[i]) = row;
+//         }
+//         k++
+
+//             else val(e[i]) = 0;
 //     }
 // }
 
-static unsigned long compress(spa_mat *m, double vals[],unsigned long num_val)
+void print_compress_sparse(spa_mat *m)
 {
-    unsigned long row_dens[height_sparse(m)];
-    unsigned long compressed_len, max_offset;
-    int i, row;
-    unsigned long num_nzd = 0;
-    for (int i = 0; i < num_val; i++)
-    {
-        if (vals[i] != 0)
-        {
-            ele_nz(*m)[num_nzd].val = vals[i];
-            index(*m)[num_nzd] = e.p.col;
-            if (e.p.row < max_row)
-                offset(*m)[num_nzd] = e.p.row;
-            else
-                offset(*m)
-        }
-        else
-            ;
-    }
-
-        compressed_len = 0;
-    for (i = 0; i < 2 * nelem(m); i++)
-    {
-        vals[i] = zero(m);
-        rows[i] = 0;
-    }
-
-    max_offset = 0;
-
-    /* fills the row_dens vector with row indices by the order in which they
-   * should be inserted in the compressed vectors */
-    list_rows_by_density(m, row_dens);
-
-    for (i = 0; i < height_sparse(m); i++)
-    {
-        row = row_dens[i];
-        offsets[row - row(min(m))] = find_slot(m, vals, rows, compressed_len, row);
-        max_offset = max_int(max_offset, offsets[row - row(min(m))]);
-        compressed_len = max_offset + width_sparse(m);
-    }
-
-    return compressed_len;
-}
-
-void print_compress_sparse(spa_mat m)
-{
-    double vals[nelem(m) * 2];
-    unsigned long rows[nelem(m) * 2];
-    unsigned long offsets[height_sparse(m)];
-    unsigned long compressed_len;
-    unsigned long i;
-
-    if (density_sparse(m) > 0.5)
-    {
-        printf("dense matrix\n");
-        return;
-    }
-
-    compressed_len = compress(m, vals, rows, offsets);
-
-    printf("value =");
-    for (i = 0; i < compressed_len; i++)
-        printf(" %.3f", vals[i]);
+    printf("\nvalue =");
+    for (unsigned long i = 0; i < m->num_nzd; i++)
+        printf(" %f", val(*m)[i]);
     printf("\n");
 
     printf("index =");
-    for (i = 0; i < compressed_len; i++)
-        printf(" %lu", rows[i]);
+    for (unsigned long i = 0; i < m->num_nzd; i++)
+        printf(" %lu", index(*m)[i]);
     printf("\n");
 
-    printf("offset =");
-    for (i = 0; i < height_sparse(m); i++)
-        printf(" %lu", offsets[i]);
+    printf("ofset =");
+    for (unsigned long i = 0; i < m->num_row + 1; i++)
+        printf(" %lu", offset(*m)[i]);
     printf("\n");
+}
+
+int main(int argc, char const *argv[])
+{
+    float a[] = {
+        1, 7, 0, 0, 0, 0,
+        0, 2, 8, 0, 0, 5,
+        5, 0, 3, 9, 0, 6,
+        0, 6, 0, 4, 0, 0,
+        0, 0, 0, 0, 1, 1,
+        1, 0, 1, 0, 0, 0};
+    float b[] = {
+        1, 7, 0, 0,
+        0, 2, 8, 0,
+        5, 0, 3, 9,
+        0, 6, 0, 4};
+    // number of ele
+    size_t max_row = 6, max_col = 6;
+    // size_t max_row = 4, max_col = 4;
+
+    ele *ele_test = calloc(max_row * max_col, sizeof(ele));
+
+    //ele,index -> num of ele; offset -> number of row
+    spa_mat spmat_test = {};
+    spmat_test.val = calloc(max_row * max_col, sizeof(val_t));
+    spmat_test.col_index = calloc(max_row * max_col, sizeof(index_t));
+    spmat_test.offset = calloc(max_row + 1, sizeof(offset_t));
+
+    put_into_ele(a, max_row, max_col, ele_test);
+    // put_into_ele(b, max_row, max_col, ele_test);
+
+    compress(ele_test, max_row, max_col, &spmat_test);
+    free(ele_test);
+    // printf("%f\t", spmat_test.ele_nz[0].val);
+    print_compress_sparse(&spmat_test);
+    return 0;
 }
