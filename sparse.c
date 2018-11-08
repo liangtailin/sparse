@@ -7,7 +7,7 @@
 #include "sparse.h"
 
 /* for sparse mat */
-#define ele_nz(a) ((a).ele_nz)
+
 #define index(a) ((a).col_index)
 #define offset(a) ((a).offset)
 
@@ -57,6 +57,7 @@ void compress(ele *e, size_t max_row, size_t max_col, spa_mat *m)
         else
             num_z += 1;
     }
+    //finish offset val
     offset(*m)[ofst] = num_nz;
     m->num_zd = num_z;
     m->num_nzd = num_nz;
@@ -65,23 +66,23 @@ void compress(ele *e, size_t max_row, size_t max_col, spa_mat *m)
     printf("nzd = %ld, zd = %ld\n", num_nz, num_z);
 }
 
-// void decompress(spa_mat *m, size_t max_row, size_t max_col, ele *e)
-// {
-//     int k = 0;
-//     int col = 0, row = 0;
-//     for (int i = 0; i < max_col * max_row; i++)
-//     {
-//         for (int j = 0; j < offset(*m)[k]; j++)
-//         {
-//             val(e[i]) = m->ele_nz[j].val;
-//             col(e[i]) = m->ele_nz[j].val;
-//             row(e[i]) = row;
-//         }
-//         k++
+void decompress(spa_mat *m, size_t max_row, size_t max_col, ele *e)
+{
+    int k = 0;
+    int row = 0;
+    for (int i = 0; i < max_col * max_row; i++)
+    {
+        for (int j = 0; j < offset(*m)[k]; j++)
+        {
+            val(e[i]) = val(*m)[i];
+            col(e[i]) = index(*m)[i];
+            row(e[i]) = row;
+        }
+        row++;
 
-//             else val(e[i]) = 0;
-//     }
-// }
+        // else val(e[i]) = 0;
+    }
+}
 
 void print_compress_sparse(spa_mat *m)
 {
