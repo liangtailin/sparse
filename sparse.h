@@ -30,10 +30,17 @@ typedef struct sparse_matrix
 
 
 //functions
-bool add_el(spa_mat *m, ele e);
-void put_into_ele(val_t *a, count_t max_row, count_t max_col, ele *e);
-void compress(ele *e, count_t max_row, count_t max_col, spa_mat *m);
-void decompress(spa_mat *m, ele *e);
+/*ele trans vec*/
+val_t* ele2vec(ele *e, count_t max_row, count_t max_col);
+ele* vec2ele(val_t *vec, count_t max_row, count_t max_col);
+
+/*compression*/
+spa_mat compress(ele *e, count_t max_row, count_t max_col);
+ele* decompress(spa_mat *m, size_t max_row, size_t max_col);
+
+/*print*/
 void print_compress_sparse(spa_mat *m);
+void print_sparse(ele *e, size_t max_row, size_t max_col);
+void print_vec(val_t *a, size_t max_row, size_t max_col);
 
 #endif
