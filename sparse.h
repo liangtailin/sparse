@@ -40,7 +40,7 @@ ele* decompress(spa_mat *m, size_t max_row, size_t max_col);
 
 /*print*/
 void print_compress_sparse(spa_mat *m);
-void print_sparse(ele *e, size_t max_row, size_t max_col);
+void print_elements(ele *e, size_t max_row, size_t max_col);
 void print_vec(val_t *a, size_t max_row, size_t max_col);
 
 #endif
