@@ -18,13 +18,13 @@
 
 
 /* zero valued elements occupied memory */
-ele *vec2ele(val_t *vec, count_t max_row, count_t max_col)
+ele *vec2ele(val_t *vec, count_t num_row, count_t num_col)
 {
-    ele *e = calloc(max_row * max_col, sizeof(ele));
+    ele *e = calloc(num_row * num_col, sizeof(ele));
     count_t k = 0;
-    for (count_t i = 0; i < max_row; i++)
+    for (count_t i = 0; i < num_row; i++)
     {
-        for (count_t j = 0; j < max_col; j++)
+        for (count_t j = 0; j < num_col; j++)
         {
             if (vec[k])
             {
@@ -40,20 +40,20 @@ ele *vec2ele(val_t *vec, count_t max_row, count_t max_col)
 }
 
 /* zero valued elements occupied memory */
-val_t *ele2vec(ele *e, count_t max_row, count_t max_col)
+val_t *ele2vec(ele *e, count_t num_row, count_t num_col)
 {
-    val_t *vec = calloc(max_col * max_row, sizeof(val_t));
-    for (count_t i = 0; i < max_col * max_row; i++)
+    val_t *vec = calloc(num_col * num_row, sizeof(val_t));
+    for (count_t i = 0; i < num_col * num_row; i++)
     {
         if (val(e[i]))
-            vec[max_col * row(e[i]) + col(e[i])] = val(e[i]);
+            vec[num_col * row(e[i]) + col(e[i])] = val(e[i]);
         else
             vec[i] = 0;
     }
     return vec;
 }
 
-spa_mat compress(ele *e, size_t max_row, size_t max_col)
+spa_mat compress(ele *e, size_t num_row, size_t num_col)
 {
     size_t ofst = 0;
     size_t last_nzd = 0;
@@ -62,14 +62,14 @@ spa_mat compress(ele *e, size_t max_row, size_t max_col)
     /*spmt init*/
     spmt.num_nzd = 0,
     spmt.num_zd = 0;
-    spmt.num_row = max_row;
-    spmt.num_col = max_col;
-    spmt.val = calloc(max_row * max_col, sizeof(val_t));
-    spmt.col_index = calloc(max_row * max_col, sizeof(index_t));
-    spmt.offset = calloc(max_row + 1, sizeof(offset_t));
+    spmt.num_row = num_row;
+    spmt.num_col = num_col;
+    spmt.val = calloc(num_row * num_col, sizeof(val_t));
+    spmt.col_index = calloc(num_row * num_col, sizeof(index_t));
+    spmt.offset = calloc(num_row + 1, sizeof(offset_t));
 
     /* put into CSR */
-    for (int i = 0; i < max_row * max_col; i++)
+    for (int i = 0; i < num_row * num_col; i++)
     {
         if (val(e[i]) != 0)
         {
@@ -93,11 +93,11 @@ spa_mat compress(ele *e, size_t max_row, size_t max_col)
     return spmt;
 }
 
-ele *decompress(spa_mat *m, size_t max_row, size_t max_col)
+ele *decompress(spa_mat *m, size_t num_row, size_t num_col)
 {
     int row = 0;
-    ele *e = calloc(max_row * max_col, sizeof(ele));
-    for (int j = 0; j < max_row; j++)
+    ele *e = calloc(num_row * num_col, sizeof(ele));
+    for (int j = 0; j < num_row; j++)
     {
         for (int i = 0; i <= offset(*m)[row]; i++)
         {
@@ -129,11 +129,11 @@ void print_compress_sparse(spa_mat *m)
     printf("\n");
 }
 
-void print_elements(ele *e, size_t max_row, size_t max_col)
+void print_elements(ele *e, size_t num_row, size_t num_col)
 {
-    for (int i = 0; i < max_col * max_row; i++)
+    for (int i = 0; i < num_col * num_row; i++)
     {
-        if (i % max_col)
+        if (i % num_col)
             printf("%f ", val(e[i]));
         else
             printf("\n%f ", val(e[i]));
@@ -144,15 +144,15 @@ void print_elements(ele *e, size_t max_row, size_t max_col)
     Discreption:    print vector as a matrix
     Parameters:
         @a          
-        @max_row    
-        @max_col    
+        @num_row    
+        @num_col    
     Return: 
 */
-void print_vec(val_t *a, size_t max_row, size_t max_col)
+void print_vec(val_t *a, size_t num_row, size_t num_col)
 {
-    for (int i = 0; i < max_row * max_col; i++)
+    for (int i = 0; i < num_row * num_col; i++)
     {
-        if (i % max_col)
+        if (i % num_col)
             printf("%f ", a[i]);
         else
             printf("\n%f ", a[i]);
@@ -174,25 +174,25 @@ int main(int argc, char const *argv[])
         5, 0, 3, 9,
         0, 6, 0, 4};
     // number of ele
-    // size_t max_row = 6, max_col = 6;
-    size_t max_row = 4, max_col = 4;
+    // size_t num_row = 6, num_col = 6;
+    size_t num_row = 4, num_col = 4;
 
-    // ele *ele_test = calloc(max_row * max_col, sizeof(ele));
+    // ele *ele_test = calloc(num_row * num_col, sizeof(ele));
 
     //ele,index -> num of ele; offset -> number of row
 
-    // float *c = calloc(max_col * max_row, sizeof(val_t));
+    // float *c = calloc(num_col * num_row, sizeof(val_t));
 
     puts("\noriginal sparse");
-    print_vec(b, max_row, max_col);
+    print_vec(b, num_row, num_col);
 
     puts("\nafter vec2ele");
-    ele *ele_test = vec2ele(b, max_row, max_col);
-    print_elements(ele_test, max_row, max_col);
-    //spa_mat spmat_test = compress(ele_test, max_row, max_col);
+    ele *ele_test = vec2ele(b, num_row, num_col);
+    print_elements(ele_test, num_row, num_col);
+    //spa_mat spmat_test = compress(ele_test, num_row, num_col);
     
     puts("\nafter ele2vec");
-    print_vec(ele2vec(ele_test, max_row, max_col), max_row, max_col);
+    print_vec(ele2vec(ele_test, num_row, num_col), num_row, num_col);
 
     // free(ele_test);
 
@@ -200,12 +200,12 @@ int main(int argc, char const *argv[])
     // print_compress_sparse(&spmat_test);
 
     // puts("\nafter decompress");
-    // ele *ele_decomp = decompress(&spmat_test, max_row, max_col);
-    // print_elements(ele_decomp, max_row, max_col);
+    // ele *ele_decomp = decompress(&spmat_test, num_row, num_col);
+    // print_elements(ele_decomp, num_row, num_col);
 
-    // // float *c = ele2vec(ele_test, max_row, max_col);
+    // // float *c = ele2vec(ele_test, num_row, num_col);
     // puts("\nafter ele2vec");
-    // print_vec(ele2vec(ele_test, max_row, max_col), max_row, max_col);
+    // print_vec(ele2vec(ele_test, num_row, num_col), num_row, num_col);
 
     return 0;
 }
