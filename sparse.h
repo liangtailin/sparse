@@ -36,16 +36,16 @@ val_t* ele2vec(ele *e, count_t num_row, count_t num_col);
 ele* vec2ele(val_t *vec, count_t num_row, count_t num_col);
 
 /* compression */
-spa_mat ele2csr(ele *e, count_t num_row, count_t num_col);
+spa_mat ele2csr(ele *e, count_t num_row, count_t num_col, count_t num_ele);
 ele* csr2ele(spa_mat *m);
 
 /* print */
 void print_csr(spa_mat *m);
-void print_ele(ele *e, size_t num_row, size_t num_col);
-void print_vec(val_t *a, size_t num_row, size_t num_col);
+void print_ele(ele *e, count_t num_row, count_t num_col);
+void print_vec(val_t *a, count_t num_row, count_t num_col);
 
 /* combination */
 val_t *csr2vec(spa_mat *m);
-spa_mat vec2csr(val_t *a, size_t num_row, size_t num_col);
+spa_mat vec2csr(val_t *a, count_t num_row, count_t num_col);
 
 #endif

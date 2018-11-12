@@ -94,10 +94,11 @@ val_t *ele2vec(ele *e, count_t num_row, count_t num_col)
         @num_col    row number of matrix like vector.
     Return:         CSR style storage.
 */
-spa_mat ele2csr(ele *e, size_t num_row, size_t num_col)
+spa_mat ele2csr(ele *e, count_t num_row, count_t num_col, count_t num_ele)
 {
-    size_t ofst = 0;
-    size_t last_nzd = 0;
+    count_t ofst = 0;
+    count_t last_nzd = 0;
+    printf("--------%d----------", num_ele);
     spa_mat spmt = {};
 
     /*spmt init*/
@@ -105,12 +106,13 @@ spa_mat ele2csr(ele *e, size_t num_row, size_t num_col)
     spmt.num_zd = 0;
     spmt.num_row = num_row;
     spmt.num_col = num_col;
-    spmt.val = calloc(num_row * num_col, sizeof(val_t));
-    spmt.col_index = calloc(num_row * num_col, sizeof(index_t));
+    spmt.val = calloc(num_ele, sizeof(val_t));
+    spmt.col_index = calloc(num_ele, sizeof(index_t));
     spmt.offset = calloc(num_row + 1, sizeof(offset_t));
 
     /* put into CSR */
-    for (size_t i = 0; i < num_row * num_col; i++)
+    for (count_t i = 0; i < num_ele; i++)
+    // for (count_t i = 0; i < num_row * num_col; i++)
     {
         if (val(e[i]) != 0)
         {
@@ -192,9 +194,9 @@ void print_csr(spa_mat *m)
     Note:           honestly it's useless unless when debug
     FIXME:          parameters should have a indicate of size of elements, or I can calculate with sizeof(.)
 */
-void print_ele(ele *e, size_t num_row, size_t num_col)
+void print_ele(ele *e, count_t num_row, count_t num_col)
 {
-    for (size_t i = 0; i < 9; i++)
+    for (count_t i = 0; i < 9; i++)
     {
         printf("element %d, val = %f, pos = %d,%d\n", i, val(e[i]), row(e[i]), col(e[i]));
     }
@@ -208,9 +210,9 @@ void print_ele(ele *e, size_t num_row, size_t num_col)
         @num_col    col number of matrix
     Return:         null
 */
-void print_vec(val_t *a, size_t num_row, size_t num_col)
+void print_vec(val_t *a, count_t num_row, count_t num_col)
 {
-    for (size_t i = 0; i < num_row * num_col; i++)
+    for (count_t i = 0; i < num_row * num_col; i++)
     {
         if (i % num_col)
             printf("%f ", a[i]);
@@ -224,65 +226,69 @@ val_t *csr2vec(spa_mat *m)
     return ele2vec(csr2ele(m), m->num_row, m->num_col);
 }
 
-spa_mat vec2csr(val_t *a, size_t num_row, size_t num_col)
+spa_mat vec2csr(val_t *a, count_t num_row, count_t num_col)
 {
-    return ele2csr(vec2ele(a, num_row, num_col), num_row, num_col);
+    count_t k = 0;
+    for (count_t i = 0; i < num_col * num_row; i++)
+        k = a[i] ? k + 1 : k;
+    ele *e = vec2ele(a, num_row, num_col);
+    return ele2csr(e, num_row, num_col, k);
 }
 
-// int main(int argc, char const *argv[])
-// {
-//     float a[] = {
-//         1, 7, 0, 0, 0, 0,
-//         0, 2, 8, 0, 0, 5,
-//         5, 0, 3, 9, 0, 6,
-//         0, 6, 0, 4, 0, 0,
-//         0, 0, 0, 0, 1, 1,
-//         1, 0, 1, 0, 0, 0};
-//     float b[] = {
-//         1, 7, 0, 0,
-//         0, 2, 8, 0,
-//         5, 0, 3, 9,
-//         0, 6, 0, 4};
-//     // number of ele
-//     size_t num_row = 6, num_col = 6;
-//     //size_t num_row = 4, num_col = 4;
+int main(int argc, char const *argv[])
+{
+    float a[] = {
+        1, 7, 0, 0, 0, 0,
+        0, 2, 8, 0, 0, 5,
+        5, 0, 3, 9, 0, 6,
+        0, 6, 0, 4, 0, 0,
+        0, 0, 0, 0, 1, 1,
+        1, 0, 1, 0, 0, 0};
+    float b[] = {
+        1, 7, 0, 0,
+        0, 2, 8, 0,
+        5, 0, 3, 9,
+        0, 6, 0, 4};
+    // number of ele
+    count_t num_row = 6, num_col = 6;
+    //count_t num_row = 4, num_col = 4;
 
-//     // ele *ele_test = calloc(num_row * num_col, sizeof(ele));
+    // ele *ele_test = calloc(num_row * num_col, sizeof(ele));
 
-//     //ele,index -> num of ele; offset -> number of row
-//     spa_mat spmat = vec2csr(a, 6, 6);
-//     print_csr(&spmat);
+    //ele,index -> num of ele; offset -> number of row
+    spa_mat spmat = vec2csr(a, 6, 6);
+    print_csr(&spmat);
 
-//     // float *c = calloc(num_col * num_row, sizeof(val_t));
+    // float *c = calloc(num_col * num_row, sizeof(val_t));
 
-//     puts("---------------");
-//     print_vec(csr2vec(&spmat), 6, 6);
-//     // puts("\noriginal sparse");
-//     // print_vec(b, num_row, num_col);
+    puts("---------------");
+    print_vec(csr2vec(&spmat), 6, 6);
+    // puts("\noriginal sparse");
+    // print_vec(b, num_row, num_col);
 
-//     // puts("\nafter vec2ele");
-//     // ele *ele_test = vec2ele(a, num_row, num_col);
-//     // print_ele(ele_test, num_row, num_col);
-//     // spa_mat spmat_test = ele2csr(ele_test, num_row, num_col);
+    // puts("\nafter vec2ele");
+    // ele *ele_test = vec2ele(a, num_row, num_col);
+    // print_ele(ele_test, num_row, num_col);
+    // spa_mat spmat_test = ele2csr(ele_test, num_row, num_col);
 
-//     // puts("\nafter ele2vec");
-//     // print_vec(ele2vec(ele_test, num_row, num_col), num_row, num_col);
+    // puts("\nafter ele2vec");
+    // print_vec(ele2vec(ele_test, num_row, num_col), num_row, num_col);
 
-//     // free(ele_test);
+    // free(ele_test);
 
-//     // puts("\nafter compress");
-//     // print_csr(&spmat_test);
+    // puts("\nafter compress");
+    // print_csr(&spmat_test);
 
-//     // puts("\nafter decompress");
-//     // ele *ele_decomp = csr2ele(&spmat_test);
-//     // print_ele(ele_decomp, num_row, num_col);
+    // puts("\nafter decompress");
+    // ele *ele_decomp = csr2ele(&spmat_test);
+    // print_ele(ele_decomp, num_row, num_col);
 
-//     // float *c = ele2vec(ele_decomp, num_row, num_col);
-//     // puts("\nafter ele2vec");
-//     // print_vec(c, num_row, num_col);
+    // float *c = ele2vec(ele_decomp, num_row, num_col);
+    // puts("\nafter ele2vec");
+    // print_vec(c, num_row, num_col);
 
-//     // float *d = csr2vec(&spmat_test);
-//     // print_vec(d, num_row, num_col);
+    // float *d = csr2vec(&spmat_test);
+    // print_vec(d, num_row, num_col);
 
-//     return 0;
-// }
+    return 0;
+}
